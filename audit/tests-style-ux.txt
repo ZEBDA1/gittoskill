@@ -1,0 +1,38 @@
+$ node --test tests/*.test.mjs
+✔ API returns typed client errors for null, malformed, oversized and unsupported bodies (304.6673ms)
+✔ API bounds stalled request bodies before generation (5132.6598ms)
+✔ API cache hit returns installable contract and cache/timing headers (70.7159ms)
+✔ full generation uses public pinned evidence, real code, structured output and validated citations (65.2766ms)
+✔ profile README citations preserve actual filename and commit (46.3205ms)
+✔ missing optional profile README preserves partial GitHub data with one query (26.8728ms)
+✔ upstream rate limits and large responses are bounded without exposing provider bodies (6.8135ms)
+✔ download archive preserves UTF-8 content, file sizes, checksums and references (120.7494ms)
+✔ CLI and web share strict profile parsing (1.8258ms)
+✔ reject traversals, device paths, duplicates and mismatched bundles before writes (16.9735ms)
+✔ snapshot restores previous bundle after installer failure and locks concurrent installs (27.7222ms)
+✔ generated skill is recognized by the actual skills CLI (330.7327ms)
+✔ .gitignore is created correctly and remains idempotent after install (152.2026ms)
+✔ cache coalesces simultaneous generations, reuses output, and bounds quotas (440.1677ms)
+✔ failed generation releases locks, bad caches regenerate, quotas are atomic (51.6358ms)
+✔ production requires shared storage unless single-instance fallback is explicit (64.8657ms)
+✔ repo selection preserves four distinct sources and language diversity (55.8836ms)
+✔ Azure rejects truncated and refused output without a second paid attempt (42.2498ms)
+✔ analysis rejects invented sources and UI claims without design evidence (15.2276ms)
+✔ Redis REST coordinates separate workers and conditionally releases only owned locks (450.3108ms)
+✔ selection excludes copied templates, forks, archived and profile README repositories (215.4904ms)
+✔ sample discovery prefers implementation and tests, excluding generated and unsafe files (66.5113ms)
+✔ attributed snippets exclude other authors and reject tiny or invalid blame ranges (52.8269ms)
+✔ implementation sampling covers C, C++, C#, Dart and non-web profiles (39.6031ms)
+✔ foreign pinned projects require both authored history and attributed implementation (112.0735ms)
+✔ owned projects retain context without claiming another author’s code (38.9786ms)
+✔ testing practices need tests and cross-project labels need distinct implementation sources (20.0498ms)
+✔ evidence budget is shared across projects; biography and popularity never support style (16.7605ms)
+✔ minimal organization report exposes missing evidence and rejects unsafe metadata in bundles (14.3269ms)
+ℹ tests 29
+ℹ suites 0
+ℹ pass 29
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6211.8948

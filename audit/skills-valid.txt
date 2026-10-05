@@ -1,0 +1,19 @@
+
+|
+•   codex  Agent detected — installing non-interactively
+[?25l|
+o  Source: C:\Users\ZEBDA\Downloads\gittoskill-master\audit\fixtures\valid
+[?25h[?25l|
+o  Local path validated
+[?25h[?25l|
+o  Found 1 skill
+[?25h
+|
+o  Available Skills
+|
+|    valid
+|
+|      Use the fixture coding style when explicitly requested.
+
+|
+—  Use --skill <name> to install specific skills

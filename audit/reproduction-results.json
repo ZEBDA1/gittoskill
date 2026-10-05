@@ -1,0 +1,49 @@
+[
+  {
+    "check": "JSON null escapes route error handling",
+    "reproduced": true,
+    "error": "Cannot read properties of null (reading 'profile')"
+  },
+  {
+    "check": "Duplicate repositories consume analysis slots",
+    "selected": [
+      "owner/a",
+      "owner/a",
+      "owner/b",
+      "owner/b"
+    ],
+    "unique": 2
+  },
+  {
+    "check": "Generated bundle has no deterministic required frontmatter",
+    "hasFrontmatter": false,
+    "markdown": "## Philosophy\n- Small tools\n\n## Tech Stack\n- TypeScript\n"
+  },
+  {
+    "check": "Reference path escapes staging directory (intercepted writes only)",
+    "relativeWrites": [
+      "SKILL.md",
+      "..\\escaped.md"
+    ]
+  },
+  {
+    "check": "CLI accepts invalid username in URL while server rejects it",
+    "cli": {
+      "login": "foo.bar"
+    },
+    "server": null
+  },
+  {
+    "check": "Undefined readTextIfExists after installation",
+    "reproduced": true,
+    "error": "readTextIfExists is not defined"
+  },
+  {
+    "check": "Missing optional profile README repeats successful user query",
+    "githubCalls": 2
+  },
+  {
+    "check": "Truncated model output is accepted as complete",
+    "accepted": "## Philosophy\n- Partial"
+  }
+]

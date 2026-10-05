@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
 
-const siteUrl = 'https://gittoskill.vercel.app'
+import { siteUrl } from '@/lib/site-config'
 
 export default function robots(): MetadataRoute.Robots {
   return {

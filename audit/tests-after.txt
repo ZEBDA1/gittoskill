@@ -1,0 +1,29 @@
+$ node --test tests/*.test.mjs
+✔ API returns typed client errors for null, malformed, oversized and unsupported bodies (223.1091ms)
+✔ API bounds stalled request bodies before generation (5091.1973ms)
+✔ API cache hit returns installable contract and cache/timing headers (51.2796ms)
+✔ full generation uses public pinned evidence, real code, structured output and validated citations (39.3868ms)
+✔ profile README citations preserve actual filename and commit (22.7974ms)
+✔ missing optional profile README preserves partial GitHub data with one query (15.3062ms)
+✔ upstream rate limits and large responses are bounded without exposing provider bodies (7.3283ms)
+✔ download archive preserves UTF-8 content, file sizes, checksums and references (96.6543ms)
+✔ CLI and web share strict profile parsing (1.1237ms)
+✔ reject traversals, device paths, duplicates and mismatched bundles before writes (13.5907ms)
+✔ snapshot restores previous bundle after installer failure and locks concurrent installs (22.0983ms)
+✔ generated skill is recognized by the actual skills CLI (273.445ms)
+✔ .gitignore is created correctly and remains idempotent after install (104.448ms)
+✔ cache coalesces simultaneous generations, reuses output, and bounds quotas (417.6134ms)
+✔ failed generation releases locks, bad caches regenerate, quotas are atomic (31.2312ms)
+✔ production requires shared storage unless single-instance fallback is explicit (47.1084ms)
+✔ repo selection preserves four distinct sources and language diversity (29.2629ms)
+✔ Azure rejects truncated and refused output without a second paid attempt (33.7833ms)
+✔ analysis rejects invented sources and UI claims without design evidence (11.9106ms)
+✔ Redis REST coordinates separate workers and conditionally releases only owned locks (427.9663ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5935.0741

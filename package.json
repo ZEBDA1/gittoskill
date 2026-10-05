@@ -1,36 +1,38 @@
 {
-  "name": "gittoskill",
-  "version": "0.1.0",
+  "name": "gittoskill-web",
+  "version": "0.2.0",
   "description": "Turn a GitHub profile into an installable coding skill.",
-  "bin": {
-    "gittoskill": "./bin/gittoskill.mjs"
-  },
   "engines": {
-    "node": ">=18"
+    "node": ">=24"
   },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "cli:add": "node ./bin/gittoskill.mjs add"
+    "lint": "eslint --max-warnings=0",
+    "cli:add": "node ./bin/gittoskill.mjs add",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
-    "@tailwindcss/postcss": "^4.2.1",
+    "@tailwindcss/postcss": "^4.3.3",
     "@vercel/analytics": "^1.6.1",
-    "next": "16.1.6",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
+    "next": "16.3.8",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "react-markdown": "^10.1.0",
-    "skills": "^1.5.12",
-    "tailwindcss": "^4.2.1"
+    "tailwindcss": "^4.3.3",
+    "yaml": "2.9.1"
   },
   "devDependencies": {
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.1.6",
-    "typescript": "^5"
-  }
+    "@types/node": "^24.19.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "16.3.8",
+    "typescript": "^5.9.3"
+  },
+  "private": true,
+  "packageManager": "pnpm@11.25.0",
+  "license": "MIT"
 }

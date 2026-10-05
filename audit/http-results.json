@@ -1,0 +1,93 @@
+[
+  {
+    "name": "null",
+    "status": 500,
+    "type": null,
+    "milliseconds": 69,
+    "body": ""
+  },
+  {
+    "name": "empty object",
+    "status": 400,
+    "type": "application/json",
+    "milliseconds": 8,
+    "body": "{\"error\":\"profile is required (string).\"}"
+  },
+  {
+    "name": "invalid profile",
+    "status": 400,
+    "type": "application/json",
+    "milliseconds": 18,
+    "body": "{\"error\":\"Enter a GitHub profile like @steipete or https://github.com/steipete.\"}"
+  },
+  {
+    "name": "broken JSON",
+    "status": 400,
+    "type": "application/json",
+    "milliseconds": 16,
+    "body": "{\"error\":\"Invalid JSON body.\"}"
+  },
+  {
+    "name": "valid input, no credentials",
+    "status": 500,
+    "type": "application/json",
+    "milliseconds": 13,
+    "body": "{\"error\":\"GITHUB_TOKEN is required for GitHub profile generation.\"}"
+  },
+  {
+    "name": "Initial HTML and JavaScript assets",
+    "status": 200,
+    "htmlBytes": 13075,
+    "scriptCount": 9,
+    "jsBytes": 684938,
+    "jsGzipBytes": 208871,
+    "assets": [
+      {
+        "script": "/_next/static/chunks/358c960c5cf8716d.js",
+        "bytes": 41484,
+        "gzipBytes": 8931
+      },
+      {
+        "script": "/_next/static/chunks/4b3f24363d585145.js",
+        "bytes": 120532,
+        "gzipBytes": 32957
+      },
+      {
+        "script": "/_next/static/chunks/bd171192a2f9285a.js",
+        "bytes": 224631,
+        "gzipBytes": 70140
+      },
+      {
+        "script": "/_next/static/chunks/turbopack-921aa7fa9a0984f3.js",
+        "bytes": 10232,
+        "gzipBytes": 4016
+      },
+      {
+        "script": "/_next/static/chunks/a920695aef220e66.js",
+        "bytes": 30835,
+        "gzipBytes": 7453
+      },
+      {
+        "script": "/_next/static/chunks/4f96046378ac0be2.js",
+        "bytes": 3066,
+        "gzipBytes": 1403
+      },
+      {
+        "script": "/_next/static/chunks/5f0c59cad59a583a.js",
+        "bytes": 128206,
+        "gzipBytes": 39451
+      },
+      {
+        "script": "/_next/static/chunks/a6dad97d9634a72d.js",
+        "bytes": 112594,
+        "gzipBytes": 39627
+      },
+      {
+        "script": "/_next/static/chunks/6ec5fc9dcc6ae133.js",
+        "bytes": 13358,
+        "gzipBytes": 4893
+      }
+    ],
+    "note": "Asset bytes only; no browser execution or Core Web Vitals measurement."
+  }
+]

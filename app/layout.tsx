@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
+import { siteUrl } from '@/lib/site-config'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,7 +16,6 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
-const siteUrl = 'https://gittoskill.vercel.app'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -24,20 +24,20 @@ export const metadata: Metadata = {
     template: '%s | GitToSkill',
   },
   description:
-    'Turn any GitHub profile into an installable coding skill by analyzing the profile, repo lineup, and real code style.',
+    'Turn public GitHub code into a practical coding skill, with cited observations and clear evidence scope.',
   openGraph: {
     type: 'website',
     siteName: 'GitToSkill',
     title: 'GitToSkill',
     description:
-      'Turn any GitHub profile into an installable coding skill by analyzing the profile, repo lineup, and real code style.',
+      'Turn public GitHub code into a practical coding skill, with cited observations and clear evidence scope.',
     url: siteUrl,
   },
   twitter: {
     card: 'summary',
     title: 'GitToSkill',
     description:
-      'Turn any GitHub profile into an installable coding skill by analyzing the profile, repo lineup, and real code style.',
+      'Turn public GitHub code into a practical coding skill, with cited observations and clear evidence scope.',
   },
   other: {
     'impact-site-verification': '3e794e36-073b-4491-8b78-228e7d4d390c',
@@ -56,12 +56,12 @@ export default function RootLayout({
       >
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-violet-600 focus:px-4 focus:py-2 focus:text-white focus:ring-2 focus:ring-violet-500 focus:ring-offset-2"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-blue-700 focus:px-4 focus:py-2 focus:text-white focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
         >
           Skip to main content
         </a>
         {children}
-        <Analytics />
+        {process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_ENABLE_ANALYTICS === 'true' ? <Analytics /> : null}
       </body>
     </html>
   );

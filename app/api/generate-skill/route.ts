@@ -1,133 +1,71 @@
+import { createHash } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
-import {
-  getAzureQuickModel,
-  getAzureQuickReasoningEffort,
-  generateAzureChatText,
-} from '@/lib/azure-openai'
-import {
-  buildProfileAnalysisPrompt,
-  buildReferenceFiles,
-  buildSkillMarkdown,
-  skillDirectoryName,
-  type SkillOutput,
-} from '@/lib/generate-skill'
-import {
-  getGitHubProfileOverview,
-  getGitHubRepoStyleDetails,
-  type GitHubProfileRepo,
-} from '@/lib/github-client'
 import { parseGitHubProfileInput } from '@/lib/parse-github-profile'
+import { ServiceError, errorResponse } from '@/lib/service-error'
+import { generationStore, enforceRequestLimit, cachedGeneration } from '@/lib/generation-store'
+import { generateProfile, generationKey } from '@/lib/generate-profile'
 
-const STYLE_GUIDE_SYSTEM_PROMPT = `You are generating a descriptive coding skill profile distilled from a GitHub developer's public work.
+export const runtime = 'nodejs'
+export const maxDuration = 120
+const MAX_REQUEST_BYTES = 4096
 
-Write concise, concrete traits of this developer's approach. The reader will copy individual sections into their coding agent.
-
-Start directly with useful content. Do not include a title that repeats the developer's name or username.
-Do not output headings like "Style Guide" or "<name> / <username> style guide".
-Do not write instructions to an agent. No "you should", "reach for", "clone repos", or "how to use" language.
-Do not use third-person pronouns. Never write "they", "their", "he", "she", or the developer's name in the body.
-
-Write as a direct description of the style — attribute lists and short phrases, not narrative sentences about a person.
-
-Format each section as bullet lists. Lead with the trait, not a subject:
-- Good: "- self-hosted, local-first software with clear operational boundaries"
-- Good: "- Python as the main preferred stack, with FastAPI for APIs and Pydantic for schemas"
-- Bad: "- They favor self-hosted, local-first software"
-- Bad: "- He prefers Python for backend work"
-
-Use these sections exactly:
-1. "## Philosophy" — values, priorities, and building mindset; draw mainly from profile README, bio, and repository README excerpts
-2. "## Tech Stack" — languages, frameworks, tooling, and architectural choices; draw from dependency manifest files (package.json, requirements.txt, pyproject.toml, etc.)
-3. "## UI Taste" — only if there is evidence from CSS, design token, or tailwind config files; product and visual/design sensibility
-
-Omit "## UI Taste" entirely if there is no UI/design evidence. Keep every section short enough to paste into a chat.
-
-After each section's bullet list, add one attribution line in this exact format:
-> Source: \`<file-path>\` — <owner/repo>
-
-Use the actual file path and repository name from the provided evidence. For Philosophy, cite the profile README or the most relevant repo README. For Tech Stack, cite the dependency manifest file used. For UI Taste, cite the CSS or design file used.
-
-Focus on observations backed by the provided repositories and profile materials. Avoid filler, hype, or safety disclaimers.`
-
-function selectReposForDeepDive(repos: GitHubProfileRepo[]): GitHubProfileRepo[] {
-  return repos
-    .filter((repo) => !repo.isArchived)
-    .sort((left, right) => {
-      const leftScore = left.stargazerCount + left.forkCount * 2
-      const rightScore = right.stargazerCount + right.forkCount * 2
-      return rightScore - leftScore
-    })
-    .slice(0, 4)
+async function readInput(request: NextRequest): Promise<string> {
+  if (!/^application\/json(?:\s*;|\s*$)/i.test(request.headers.get('content-type') ?? '')) throw new ServiceError('INVALID_CONTENT_TYPE', 'Send an application/json request.', 415)
+  const declared = Number(request.headers.get('content-length'))
+  if (declared > MAX_REQUEST_BYTES) throw new ServiceError('BODY_TOO_LARGE', 'Request body is too large.', 413)
+  const reader = request.body?.getReader()
+  if (!reader) throw new ServiceError('INVALID_BODY', 'profile is required (string).', 400)
+  const chunks: Uint8Array[] = []
+  let size = 0
+  let timedOut = false
+  const cancel = () => { void reader.cancel().catch(() => {}) }
+  const timer = setTimeout(() => { timedOut = true; cancel() }, 5000)
+  request.signal.addEventListener('abort', cancel, { once: true })
+  try {
+    request.signal.throwIfAborted()
+    while (true) {
+      const { value, done } = await reader.read()
+      if (timedOut) throw new ServiceError('REQUEST_TIMEOUT', 'Request body timed out.', 408)
+      request.signal.throwIfAborted()
+      if (done) break
+      size += value.length
+      if (size > MAX_REQUEST_BYTES) { await reader.cancel(); throw new ServiceError('BODY_TOO_LARGE', 'Request body is too large.', 413) }
+      chunks.push(value)
+    }
+  } finally {
+    clearTimeout(timer)
+    request.signal.removeEventListener('abort', cancel)
+    reader.releaseLock()
+  }
+  const bytes = new Uint8Array(size)
+  let offset = 0
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length }
+  let body: unknown
+  try { body = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)) } catch { throw new ServiceError('INVALID_JSON', 'Invalid JSON body.', 400) }
+  if (!body || typeof body !== 'object' || !('profile' in body) || typeof body.profile !== 'string') throw new ServiceError('INVALID_BODY', 'profile is required (string).', 400)
+  const parsed = parseGitHubProfileInput(body.profile)
+  if (!parsed) throw new ServiceError('INVALID_PROFILE', 'Enter a GitHub profile like @steipete or https://github.com/steipete.', 400)
+  return parsed.login
 }
 
 export async function POST(request: NextRequest) {
-  let body: { profile?: string }
+  const start = performance.now()
   try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 })
-  }
-
-  if (typeof body.profile !== 'string') {
-    return NextResponse.json(
-      { error: 'profile is required (string).' },
-      { status: 400 }
-    )
-  }
-
-  const parsed = parseGitHubProfileInput(body.profile)
-  if (!parsed) {
-    return NextResponse.json(
-      {
-        error:
-          'Enter a GitHub profile like @steipete or https://github.com/steipete.',
-      },
-      { status: 400 }
-    )
-  }
-
-  try {
-    const overview = await getGitHubProfileOverview(parsed.login)
-    const selectedRepos = selectReposForDeepDive([
-      ...overview.pinnedRepos,
-      ...overview.topRepos,
-    ])
-    const repoDetails = await getGitHubRepoStyleDetails(selectedRepos)
-
-    const styleGuide = await generateAzureChatText({
-      model: getAzureQuickModel(),
-      systemPrompt: STYLE_GUIDE_SYSTEM_PROMPT,
-      userMessage: buildProfileAnalysisPrompt({ overview, repoDetails }),
-      reasoningEffort: getAzureQuickReasoningEffort(),
-      maxCompletionTokens: 2000,
-    })
-
-    const skillMarkdown = buildSkillMarkdown({
-      overview,
-      repoDetails,
-      styleGuide,
-    })
-    const references = buildReferenceFiles({ overview, repoDetails })
-
-    const output: SkillOutput = {
-      login: overview.login,
-      skillDirectoryName: skillDirectoryName(overview.login),
-      skillMarkdown,
-      references,
-      installCommand: `npx gittoskill add @${overview.login}`,
-    }
-
-    return NextResponse.json(output)
+    const login = await readInput(request)
+    request.signal.throwIfAborted()
+    const store = generationStore()
+    // Only trust a header supplied/overwritten by the deployment's trusted proxy.
+    // With no trusted proxy, all clients share one conservative request bucket.
+    const ip = process.env.VERCEL ? request.headers.get('x-real-ip') : process.env.GITTOSKILL_TRUST_PROXY === 'true' ? request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() : null
+    const client = createHash('sha256').update(ip || 'unidentified-client').digest('hex').slice(0, 24)
+    await enforceRequestLimit(store, client)
+    const result = await cachedGeneration(store, generationKey(login), login, signal => generateProfile(login, signal))
+    const milliseconds = Math.round(performance.now() - start)
+    console.info(JSON.stringify({ event: 'request.completed', cache: result.cache, milliseconds }))
+    return NextResponse.json(result.output, { headers: { 'Cache-Control': 'no-store', 'X-GitToSkill-Cache': result.cache, 'Server-Timing': `total;dur=${milliseconds}` } })
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Request failed.'
-    const lower = message.toLowerCase()
-    const status =
-      lower.includes('not found')
-        ? 404
-        : lower.includes('required') || lower.includes('configured')
-          ? 500
-          : 502
-
-    return NextResponse.json({ error: message }, { status })
+    const failure = errorResponse(error)
+    console.warn(JSON.stringify({ event: 'request.failed', code: failure.body.code, status: failure.status, milliseconds: Math.round(performance.now() - start) }))
+    return NextResponse.json(failure.body, { status: failure.status, headers: { 'Cache-Control': 'no-store', ...(failure.retryAfter ? { 'Retry-After': String(failure.retryAfter) } : {}) } })
   }
 }

@@ -1,3 +1,5 @@
+import { ServiceError } from '@/lib/service-error'
+import { serviceJson } from '@/lib/service-fetch'
 const DEFAULT_AZURE_MODEL = 'gpt-5.4'
 
 export type AzureOpenAiReasoningEffort = 'none' | 'low' | 'medium' | 'high'
@@ -92,7 +94,7 @@ export function getAzureQuickModel(): string {
 export function getAzureQuickReasoningEffort(): AzureOpenAiReasoningEffort {
   return parseReasoningEffort(
     readTrimmedEnv('AZURE_OPENAI_REASONING_EFFORT'),
-    'medium'
+    'low'
   )
 }
 
@@ -111,7 +113,7 @@ export function resolveAzureDeploymentName(
 export function buildAzureOpenAiUrl(path: string): string {
   const baseUrl = getAzureOpenAiBaseUrl()
   if (!baseUrl) {
-    throw new Error('AZURE_OPENAI_BASE_URL is not configured.')
+    throw new ServiceError('CONFIGURATION', 'AZURE_OPENAI_BASE_URL is not configured.', 503)
   }
   return `${baseUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`
 }
@@ -122,10 +124,12 @@ export function buildAzureChatCompletionsBody(opts: {
   reasoningEffort?: AzureOpenAiReasoningEffort
   maxCompletionTokens?: number
   deploymentEnvName?: string
+  responseSchema?: Record<string, unknown>
 }): Record<string, unknown> {
   return {
     model: resolveAzureDeploymentName(opts.model, opts.deploymentEnvName),
     messages: opts.messages,
+    ...(opts.responseSchema ? { response_format: { type: 'json_schema', json_schema: { name: 'coding_preferences', strict: true, schema: opts.responseSchema } } } : {}),
     ...(opts.reasoningEffort
       ? { reasoning_effort: opts.reasoningEffort }
       : {}),
@@ -142,13 +146,16 @@ export async function generateAzureChatText(opts: {
   reasoningEffort?: AzureOpenAiReasoningEffort
   maxCompletionTokens?: number
   deploymentEnvName?: string
+  responseSchema?: Record<string, unknown>
+  signal?: AbortSignal
+  onUsage?: (usage: unknown) => void
 }): Promise<string> {
   const apiKey = getAzureOpenAiApiKey()
   if (!apiKey) {
-    throw new Error('AZURE_OPENAI_API_KEY is not configured.')
+    throw new ServiceError('CONFIGURATION', 'AZURE_OPENAI_API_KEY is not configured.', 503)
   }
 
-  const response = await fetch(buildAzureOpenAiUrl('chat/completions'), {
+  const { data } = await serviceJson(buildAzureOpenAiUrl('chat/completions'), {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -164,33 +171,25 @@ export async function generateAzureChatText(opts: {
         reasoningEffort: opts.reasoningEffort,
         maxCompletionTokens: opts.maxCompletionTokens,
         deploymentEnvName: opts.deploymentEnvName,
+        responseSchema: opts.responseSchema,
       })
     ),
-  })
-
-  let data: unknown
-  try {
-    data = await response.json()
-  } catch {
-    throw new Error('Azure OpenAI returned invalid JSON.')
-  }
-
-  if (!response.ok) {
-    throw new Error(
-      extractErrorMessage(data) ??
-        `Azure OpenAI failed with status ${response.status}.`
-    )
-  }
+  }, { service: 'Azure OpenAI', timeoutMs: 60_000, maxBytes: 256 * 1024, signal: opts.signal })
+  if (!data || typeof data !== 'object') throw new ServiceError('INVALID_RESPONSE', 'Azure OpenAI returned invalid data.')
+  const upstreamError = extractErrorMessage(data)
+  if (upstreamError) throw new ServiceError('INVALID_RESPONSE', 'Azure OpenAI could not complete the generation.')
+  opts.onUsage?.((data as { usage?: unknown }).usage)
 
   const choices = (data as { choices?: unknown }).choices
   if (!Array.isArray(choices) || choices.length === 0) {
-    throw new Error('Azure OpenAI returned no choices.')
+    throw new ServiceError('INVALID_RESPONSE', 'Azure OpenAI returned no choices.')
   }
 
-  const first = choices[0] as { message?: { content?: unknown } }
+  const first = choices[0] as { finish_reason?: string; message?: { content?: unknown; refusal?: unknown } }
+  if (first.finish_reason !== 'stop' || first.message?.refusal) throw new ServiceError('INCOMPLETE_GENERATION', 'The model could not produce a complete skill. Please try again.')
   const text = extractMessageText(first.message?.content)
   if (!text) {
-    throw new Error('Azure OpenAI returned an empty response.')
+    throw new ServiceError('INVALID_RESPONSE', 'Azure OpenAI returned an empty response.')
   }
 
   return text
