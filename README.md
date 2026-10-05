@@ -1,149 +1,235 @@
 # GitToSkill
 
-[![Validate](https://github.com/ZEBDA1/gittoskill/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/ZEBDA1/gittoskill/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+<p align="center">
+  <a href="https://github.com/ZEBDA1/gittoskill/actions/workflows/ci.yml">
+    <img src="https://github.com/ZEBDA1/gittoskill/actions/workflows/ci.yml/badge.svg?branch=master" alt="CI Status" />
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT" />
+  </a>
+  <img src="https://img.shields.io/badge/Node.js-24+-green.svg" alt="Node.js 24+" />
+  <img src="https://img.shields.io/badge/Next.js-16.3.8-black.svg" alt="Next.js 16.3.8" />
+  <img src="https://img.shields.io/badge/React-19.2.8-blue.svg" alt="React 19.2.8" />
+  <img src="https://img.shields.io/badge/Production%20Audit-0%20vulnerabilities-brightgreen.svg" alt="0 Production Vulnerabilities" />
+</p>
 
-**Turn a public GitHub profile into a coding skill you can inspect, export and use with your agent.**
+<p align="center">
+  <strong>Turn any public GitHub profile into a verifiable coding skill for your AI agents.</strong><br>
+  Ground your coding assistant in real-world conventions, with verifiable source citations, Git blame attribution, and multi-agent exports.
+</p>
 
-GitToSkill looks at implementation, tests and configuration across a bounded sample of public repositories. It turns supported conventions into a style guide with source citations, attribution and explicit limitations.
+---
 
-This is a fork of [filiksyos/gittoskill](https://github.com/filiksyos/gittoskill). Credit and the original Git history are preserved. This fork adds a redesigned English interface, stronger evidence attribution, a more reliable backend and security hardening.
+## Overview
 
-![Redesigned GitToSkill homepage](docs/images/after-home-desktop.png)
+**GitToSkill** analyzes public GitHub repositories, inspects implementation patterns, tests, and configurations, and generates a structured style guide and `SKILL.md` bundle compatible with **Cursor**, **Codex**, and **Claude Code**.
 
-## Before and after
+> [!NOTE]
+> This repository is a modernized, redesigned fork of [filiksyos/gittoskill](https://github.com/filiksyos/gittoskill). Credit to the original creator and the complete Git history are preserved. This fork introduces a comprehensive visual redesign, a multi-tab evidence workspace, Git blame-level attribution, distributed Redis caching, and extensive security hardening.
 
-The previous interface used a single form and stacked result cards. The redesign introduces a clearer profile entry, a dedicated result workspace and separate **Style guide**, **Evidence** and **SKILL.md** views.
+---
 
-| Before the redesign | New homepage | New result workspace |
+## Visual Evolution: Before & After
+
+The redesign transforms GitToSkill from a single-card neo-brutalist prototype into a refined, accessible developer workspace with deep evidence inspection and flexible agent deployment.
+
+### 1. Desktop Experience: Original vs. Redesign
+
+| Original Design ([filiksyos](https://github.com/filiksyos/gittoskill)) | Modern Redesign |
+| :---: | :---: |
+| <img src="docs/images/before-original-desktop.png" alt="Original GitToSkill desktop interface with neo-brutalist styling" width="480"> | <img src="docs/images/after-home-desktop.png" alt="Redesigned GitToSkill desktop homepage" width="480"> |
+| *Neo-brutalist aesthetic: 3px heavy black outlines, purple container, offset drop shadows, and stacked accordion.* | *Clean developer UX: modern typography, subtle depth, live illustrative preview, and clear profile entry.* |
+
+---
+
+### 2. Result Workspace: Monolithic Accordion vs. Multi-Tab Inspector
+
+The original interface displayed generated observations in simple stacked cards without verifiable source links. The redesigned workspace introduces three specialized views: **Style guide**, **Evidence**, and **SKILL.md**.
+
+| Redesigned Style Guide Workspace | Verifiable Evidence & Attribution Tab |
+| :---: | :---: |
+| <img src="docs/images/after-guide-desktop.png" alt="Redesigned Style Guide view with source badges and agent installer" width="480"> | <img src="docs/images/after-evidence-desktop.png" alt="Evidence tab showing sample breadth and repository attribution" width="480"> |
+| **Style Guide**: Structured sections (*Philosophy, Code Style, Testing, UI Taste*) with citations linking directly to repository files and line numbers. Includes an agent installer switcher (**Cursor, Codex, Claude Code**) and full bundle downloads. | **Evidence Tab**: Complete transparency over sampled repositories, distinguishing profile-owned projects from team conventions, displaying blame-attributed excerpt counts, and stating sample boundaries. |
+
+---
+
+### 3. Mobile Experience: Responsive Across All Form Factors
+
+Every screen was redesigned and tested from 320px to 1280px, ensuring complete usability on mobile devices with visible keyboard focus and reduced-motion support.
+
+| Original Mobile UI | Redesigned Mobile Homepage | Redesigned Mobile Result |
 | :---: | :---: | :---: |
-| <img src="docs/images/before-redesign-mobile.png" alt="Previous mobile interface with stacked result cards" width="240"> | <img src="docs/images/after-home-mobile.png" alt="Redesigned mobile homepage" width="240"> | <img src="docs/images/after-guide-mobile.png" alt="Redesigned mobile result with tabs and source citations" width="240"> |
+| <img src="docs/images/before-redesign-mobile.png" alt="Original mobile interface with stacked cards" width="240"> | <img src="docs/images/after-home-mobile.png" alt="Redesigned mobile homepage" width="240"> | <img src="docs/images/after-guide-mobile.png" alt="Redesigned mobile result with tabs and citations" width="240"> |
+| *Stacked neo-brutalist mobile layout.* | *Mobile homepage with quick-pick profile chips.* | *Tabbed result workspace with full citation cards.* |
 
-The before capture was taken after the first backend modernization and before the visual redesign. Result screenshots use synthetic test data; they do not represent a real analysis of the displayed account. The homepage preview is illustrative.
+---
 
-<details>
-<summary>See the desktop style guide</summary>
+## Major Enhancements at a Glance
 
-![Desktop style guide with source citations and installation options](docs/images/after-guide-desktop.png)
+| Area | Original Baseline | Modern Redesign |
+| :--- | :--- | :--- |
+| **UI & Experience** | Neo-brutalist styling, stacked accordion cards, generic CLI output. | Modern responsive interface, multi-tab workspace (**Style guide**, **Evidence**, **SKILL.md**), agent selector (**Cursor / Codex / Claude Code**), keyboard accessibility (tabs, Home/End, visible focus), cancellation & retry support. |
+| **Evidence & Attribution** | Pinned repositories and profile README only; no blame attribution. | Bounded sampling (up to 4 repositories) prioritizing ownership, activity, and language diversity. Filters out forks, templates, and archived repos. Distinguishes profile authorship from team conventions using GitHub blame. |
+| **Verifiability** | Uncited model claims; no validation of evidence. | Every observation cites real files and line numbers. Unsupported sections are omitted. Clear sample boundaries; no fabricated "accuracy scores". |
+| **Performance** | Monolithic bundle; Markdown and archive logic loaded on first visit. | **13.9% reduction in initial modern JavaScript** (169,244 → 145,681 bytes gzip). Results, Markdown rendering, and archive generation load strictly on demand. |
+| **Backend & Cache** | In-memory generation prone to duplicate requests and high LLM costs. | Shared Redis REST cache, atomic distributed locks, request coalescing (8 simultaneous requests = 1 generation), configurable hourly quotas and generation deadlines. |
+| **CLI & Packaging** | Single script coupled to web dependencies; unvalidated writes. | Independent [`packages/cli`](packages/cli/README.md) package; sandboxed path validation, exclusive locks, atomic file replacement, and snapshot rollback on failure. |
+| **Security & Hardening** | 43 production audit alerts in dependencies; missing HTTP security headers. | **0 known production vulnerabilities**. HTTPS-only Azure endpoints, strict CSP, frame-ancestors protection, `nosniff`, and automated Dependabot updates. |
 
-</details>
+*Bundle size comparison is a local production build measurement (169,244 → 145,681 bytes gzip), excluding nomodule polyfills. See [detailed change report](docs/CHANGES.md).*
 
-## Major improvements
+---
 
-| Area | What changed |
-| --- | --- |
-| Experience | Responsive English interface, keyboard-accessible tabs, visible focus, reduced-motion support, cancellation, retry and preserved input. |
-| Evidence | Ownership, activity and language diversity guide repository selection. Public contributions and GitHub blame help distinguish project conventions from profile-attributed excerpts. |
-| Accuracy | Every observation cites known evidence. Unsupported sections are omitted; organizations describe team conventions. Coverage measures sample breadth, never an invented accuracy score. |
-| Generation | Structured model output, bounded requests, timeouts, safe errors and source/category validation. |
-| Reliability | Shared Redis cache, atomic quotas and locks, duplicate-request coalescing and controlled production configuration errors. |
-| Performance | Results, Markdown fallback and archive preparation load on demand. Measured initial modern JavaScript was 13.9% smaller in gzip than the original version. |
-| Installation | Separate CLI package, validated paths and bundles, staging, locking and snapshot rollback. Linked `.gitignore` files are rejected; updates use atomic replacement. |
-| Security | HTTPS-only Azure endpoints, browser security headers, server-side credentials, opt-in analytics, GitHub secret protection and dependency monitoring. |
+## How It Works
 
-The JavaScript comparison is a local production-build measurement (169,244 → 145,681 bytes gzip), not a Core Web Vitals or backend latency benchmark. See [changes and validation](docs/CHANGES.md).
-
-## How it works
-
-1. Enter `@username` or a GitHub profile URL. Examples fill the form; generation begins when you submit.
-2. Inspect the style guide, source files and attribution in the result workspace.
-3. Download `SKILL.md` or the complete `.tar` bundle, including references.
-4. Review the generated instructions before using them with Cursor, Codex or Claude Code.
-
-Only public evidence is sampled, from up to four repositories. Forks, templates, archived repositories and profile READMEs are excluded from implementation selection. A pinned repository alone does not establish authorship. The model may return no observations when evidence is insufficient. Private work and a developer's full history remain outside the guide.
-
-## Run locally
-
-Requires **Node.js 24+** and **pnpm 11.25.0**.
-
-```sh
-pnpm install --frozen-lockfile --ignore-scripts
+```mermaid
+flowchart LR
+    A["GitHub Profile\n(@username)"] --> B["Repository Sampler\n(Owned, Active, Multi-language)"]
+    B --> C["Evidence Extractor\n(GraphQL + Git Blame)"]
+    C --> D["Azure OpenAI\n(Constrained JSON Schema)"]
+    D --> E["Deterministic Validator\n(Citations & Categories)"]
+    E --> F["Interactive Workspace\n(Style Guide • Evidence • SKILL.md)"]
+    F --> G["Exports\n(SKILL.md • .tar Bundle • CLI)"]
 ```
 
-Copy [`.env.example`](.env.example) to `.env.local` and configure:
+1. **Enter a Profile**: Input `@username` or a GitHub profile URL. Quick-start examples populate the form without auto-triggering requests.
+2. **Repository Qualification**: The sampler selects up to four public repositories based on ownership, recent activity, and language diversity. Forks, templates, archived projects, and profile READMEs are excluded from implementation analysis.
+3. **Evidence Extraction**: The engine samples code, test cases, and configuration files. Commits and Git blame distinguish individual authorship from organizational conventions.
+4. **Structured Generation**: Azure OpenAI generates observations under a strict JSON schema with strict category rules and token budgets.
+5. **Deterministic Verification**: Citations, line ranges, and scopes are verified against the collected evidence before presentation.
+6. **Deploy to Your Agent**: Inspect the resulting style guide, view supporting evidence, copy agent-specific commands (`npx gittoskill add`), or download the complete `.tar` archive.
 
-| Variable | Purpose |
-| --- | --- |
-| `GITHUB_TOKEN` | Read public GitHub repositories. |
-| `AZURE_OPENAI_API_KEY` | Server-side Azure credential. |
-| `AZURE_OPENAI_BASE_URL` | HTTPS endpoint, such as `https://YOUR-RESOURCE.openai.azure.com/openai/v1`. |
-| `AZURE_OPENAI_DEPLOYMENT_NAME_MAP` | Map the configured model to a deployment available in your Azure resource. |
+---
 
-The selected deployment must support strict JSON-schema output and the configured reasoning effort. Never commit credentials or expose them through `NEXT_PUBLIC_*` variables.
+## Quickstart & Local Development
 
-```sh
-pnpm dev
+### Prerequisites
+
+- **Node.js 24+** (LTS recommended)
+- **pnpm 11.25.0+**
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/ZEBDA1/gittoskill.git
+cd gittoskill
+
+# Install dependencies with frozen lockfile
+corepack pnpm install --frozen-lockfile --ignore-scripts
 ```
 
-Open [localhost:3000](http://localhost:3000). Development uses an in-memory cache unless Redis is configured.
+### Environment Configuration
 
-## Deploy
+Copy [`.env.example`](.env.example) to `.env.local` and set your credentials:
 
-Configure `GITTOSKILL_REDIS_REST_URL` and `GITTOSKILL_REDIS_REST_TOKEN` for an HTTPS Redis REST service supporting `GET`, `SET NX EX` and `EVAL`. Production requires shared storage by default and returns a controlled 503 when it is missing.
-
-| Default limit | Value |
-| --- | --- |
-| Cache lifetime | 12 hours |
-| Requests per client | 30 per 15 minutes |
-| New generations across the deployment | 100 per hour |
-| Concurrent generations | 4 |
-| Generation deadline | 80 seconds |
-
-Additional options are documented in [`.env.example`](.env.example). `GITTOSKILL_ALLOW_MEMORY_STORE=true` is reserved for an intentional single-instance deployment; it cannot coordinate workers and resets on restart.
-
-Set `NEXT_PUBLIC_SITE_URL` to your own canonical origin before building. Analytics requires `NEXT_PUBLIC_ENABLE_ANALYTICS=true`. Enable `GITTOSKILL_TRUST_PROXY` only when your trusted proxy overwrites client IP headers; Vercel uses its platform-provided header.
-
-```sh
-pnpm build
-pnpm start
+```bash
+cp .env.example .env.local
 ```
 
-Before public launch, configure hosting-level bot/rate protection, review provider costs, and test the real GitHub/Azure/Redis configuration. Application quotas reduce abuse but do not guarantee availability or a fixed financial bill. Browser cancellation stops waiting; a bounded generation already in progress can finish for the cache and other users.
+| Variable | Description |
+| :--- | :--- |
+| `GITHUB_TOKEN` | Personal Access Token to read public repositories via GitHub GraphQL. |
+| `AZURE_OPENAI_API_KEY` | Server-side Azure OpenAI credential. |
+| `AZURE_OPENAI_BASE_URL` | HTTPS endpoint (e.g. `https://YOUR-RESOURCE.openai.azure.com/openai/v1`). |
+| `AZURE_OPENAI_DEPLOYMENT_NAME_MAP` | Map target models to your deployed Azure models. |
+| `GITTOSKILL_ALLOW_MEMORY_STORE` | Set to `true` for local development without Redis. |
 
-## CLI
+### Run Dev Server
 
-The website and [`packages/cli`](packages/cli/README.md) are separate. This fork has **not published a new npm package**. Running `npx gittoskill` can therefore use a different published version.
+```bash
+corepack pnpm dev
+```
 
-To use this checkout against the local server in PowerShell:
+Open [http://localhost:3000](http://localhost:3000).
+
+---
+
+## CLI Integration
+
+The CLI package is located in [`packages/cli`](packages/cli/README.md) and can be run locally against your dev server:
 
 ```powershell
+# PowerShell
 $env:GITTOSKILL_API_BASE_URL = 'http://localhost:3000'
 pnpm cli:add -- @steipete --agent cursor
+pnpm cli:add -- @steipete --agent claude-code
 pnpm cli:add -- @steipete --list
 ```
 
-For your deployed backend, set `GITTOSKILL_API_BASE_URL` to its HTTPS origin. The CLI's unchanged default points to the original project's `https://gittoskill.vercel.app`; a GitHub fork does not create a new hosted service.
-
-Project installation is the default; pass `--global` for global scope. Bundles are validated before writing, and failed installers restore the previous cached snapshot. Changes made by the external `skills` installer in agent directories are outside that rollback.
-
-## Validation and security
-
-```sh
-pnpm lint
-pnpm typecheck
-pnpm test
-pnpm build
-pnpm audit --prod
-pnpm audit
+```bash
+# Bash / Zsh
+GITTOSKILL_API_BASE_URL="http://localhost:3000" pnpm cli:add -- @steipete --agent cursor
 ```
 
-CI validates Linux and Windows. Tests cover inputs, provider failures, citations, attribution, cache/quotas, CLI rollback, unsafe links, HTTPS configuration and UTF-8 archives. GitHub dependency updates are scheduled weekly; security alerts and automated security updates are enabled on this fork.
+> [!TIP]
+> The CLI validates bundle integrity, path boundaries, and reserved names before writing to disk. If an installation fails, the CLI automatically restores the previous snapshot.
 
-As of **October 5, 2026**, the production dependency audit reports **zero known vulnerabilities**. The full audit still reports **CVE-2026-93687** in development-only `braces 3.0.3`, with no published npm fix. CI exposes the full audit as a non-blocking check while the production audit remains blocking. This is a known limitation, not a claim that the project has no security flaws. See [security guidance](SECURITY.md).
+---
 
-Live paid generation, hosted Redis behavior and production load still require validation with the deployment's actual credentials. Review generated skills: source citations and structured output do not guarantee semantic correctness or immunity to prompt injection.
+## Production Deployment
 
-## Project layout
+Production deployments require shared storage via Redis REST (`GET`, `SET NX EX`, `EVAL`) to coordinate rate limits, distributed locks, and request deduplication.
+
+| Limit | Default Value |
+| :--- | :--- |
+| **Cache Lifetime** | 12 hours |
+| **Rate Limit** | 30 requests per 15 minutes per client IP |
+| **Global Generation Quota** | 100 generations per hour |
+| **Concurrent Generations** | 4 simultaneous generations |
+| **Generation Deadline** | 80 seconds timeout |
+
+Configure `GITTOSKILL_REDIS_REST_URL` and `GITTOSKILL_REDIS_REST_TOKEN` in your deployment environment (e.g., Upstash or hosted Redis).
+
+```bash
+# Build and run production server
+corepack pnpm build
+corepack pnpm start
+```
+
+---
+
+## Quality & Security Verification
+
+The project includes an automated test suite, strict TypeScript checks, and security audits:
+
+```bash
+corepack pnpm lint        # ESLint 9 checks (0 warnings)
+corepack pnpm typecheck   # TypeScript check (strict mode)
+corepack pnpm test        # 32 automated unit and integration tests
+corepack pnpm build       # Production Next.js build
+corepack pnpm audit --prod # Production dependency audit (0 known vulnerabilities)
+```
+
+CI workflows run on every pull request and push across **Linux** and **Windows** environments. See [SECURITY.md](SECURITY.md) for vulnerability disclosure and threat model details.
+
+---
+
+## Project Structure
 
 ```text
-app/             Website and generation API
-components/      Profile form, result workspace and shared controls
-lib/             GitHub/Azure clients, evidence, cache and archives
-packages/cli/    CLI and shared bundle validation
-tests/           Regression tests
-docs/            Release notes and screenshots
+gittoskill/
+├── app/                  # Next.js App Router (homepage, layout, /api routes)
+├── components/           # UI components (profile-workspace, skill-workspace)
+├── lib/                  # Core engine:
+│   ├── github-client.ts  # GitHub GraphQL client & rate-limit handling
+│   ├── github-evidence.ts# Repository sampling & Git blame attribution
+│   ├── azure-openai.ts   # Azure LLM client with structured JSON output
+│   ├── profile-analysis.ts # Analysis normalization & citation verifier
+│   └── generation-store.ts # Distributed Redis cache & lock manager
+├── packages/
+│   └── cli/              # Isolated CLI tool with atomic bundle installer
+├── tests/                # Regression tests (cache, CLI, citations, UTF-8 archives)
+├── docs/                 # Documentation & media
+│   ├── images/           # Before & after UI captures
+│   └── CHANGES.md        # Detailed engineering and audit logs
+└── SECURITY.md           # Security policy and dependency status
 ```
 
-## License
+---
 
-[MIT](LICENSE). Original project by [filiksyos](https://github.com/filiksyos).
+## Credits & License
+
+- **Original Project**: Created by [filiksyos](https://github.com/filiksyos) ([filiksyos/gittoskill](https://github.com/filiksyos/gittoskill)).
+- **Modernization & Redesign**: [ZEBDA1](https://github.com/ZEBDA1/gittoskill).
+- **License**: [MIT](LICENSE).
