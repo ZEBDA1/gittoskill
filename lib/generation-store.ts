@@ -120,8 +120,10 @@ export async function cachedGeneration(
   const lock = `lock:${key}`
   if (!await store.lock(lock, token, 110)) {
     const signal = AbortSignal.timeout(95_000)
+    let delay = 250
     while (!signal.aborted) {
-      await waitFor(250, signal)
+      await waitFor(delay, signal)
+      delay = Math.min(2000, delay * 2)
       const value = await store.get(`result:${key}`)
       if (value) {
         try { return { output: validateSkillBundle(JSON.parse(value), login), cache: 'COALESCED' } } catch { throw new ServiceError('INVALID_CACHE', 'Cached generation was invalid.', 503) }

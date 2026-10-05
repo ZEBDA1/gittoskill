@@ -115,7 +115,10 @@ export function buildAzureOpenAiUrl(path: string): string {
   if (!baseUrl) {
     throw new ServiceError('CONFIGURATION', 'AZURE_OPENAI_BASE_URL is not configured.', 503)
   }
-  return `${baseUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`
+  let url: URL
+  try { url = new URL(baseUrl) } catch { throw new ServiceError('CONFIGURATION', 'Azure endpoint must be a valid HTTPS URL.', 503) }
+  if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) throw new ServiceError('CONFIGURATION', 'Azure endpoint must use HTTPS without credentials, query or fragment.', 503)
+  return `${url.href.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`
 }
 
 export function buildAzureChatCompletionsBody(opts: {

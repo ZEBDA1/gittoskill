@@ -26,3 +26,6 @@ jobs:
       - run: pnpm test
       - run: pnpm build
       - run: pnpm audit --prod
+      - name: Audit development dependencies (known upstream advisory)
+        continue-on-error: true
+        run: pnpm audit

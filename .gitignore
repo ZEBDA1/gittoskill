@@ -45,5 +45,5 @@ next-env.d.ts
 
 /.cursor
 
-# Local source backups
-/audit/*.zip
+# Local audits, reproduction scripts, logs and source backups
+/audit/

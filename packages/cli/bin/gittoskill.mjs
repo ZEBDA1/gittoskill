@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 import { spawn } from 'node:child_process'
-import { access, writeFile } from 'node:fs/promises'
+import { access, lstat, open, rename, unlink } from 'node:fs/promises'
+import { constants } from 'node:fs'
+import { randomUUID } from 'node:crypto'
 import path from 'node:path'
 import os from 'node:os'
 import { createRequire } from 'node:module'
 import { pathToFileURL } from 'node:url'
 import { parseGitHubProfileInput, skillDirectoryName } from '../src/profile.mjs'
 import { MAX_BUNDLE_BYTES, validateSkillBundle } from '../src/bundle.mjs'
-import { readTextIfExists, replaceSnapshot } from '../src/install.mjs'
+import { replaceSnapshot } from '../src/install.mjs'
 
 const require = createRequire(import.meta.url)
 
@@ -56,10 +58,34 @@ export async function ensureInstalledSkillIgnored(slug) {
     try { await access(path.join(root, ...entry.split('/').filter(Boolean))); existing.push(entry) } catch (error) { if (error.code !== 'ENOENT') throw error }
   }
   const file = path.join(root, '.gitignore')
-  const current = await readTextIfExists(file) || ''
+  let current = '', mode = 0o600
+  try {
+    const info = await lstat(file)
+    if (!info.isFile() || info.nlink !== 1) throw new Error('.gitignore must be a regular file with no links.')
+    const handle = await open(file, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0))
+    try {
+      const opened = await handle.stat()
+      if (!opened.isFile() || opened.nlink !== 1 || opened.ino !== info.ino || opened.dev !== info.dev) throw new Error('.gitignore changed while opening it.')
+      current = await handle.readFile('utf8')
+      mode = info.mode & 0o777
+    } finally { await handle.close() }
+  } catch (error) { if (error.code !== 'ENOENT') throw error }
   const lines = current.replace(/\r/g, '').split('\n')
   const additions = existing.filter(entry => !lines.includes(entry) && !lines.includes(entry.replace(/\/$/, '')))
-  if (additions.length) await writeFile(file, `${current}${current && !current.endsWith('\n') ? '\n' : ''}${lines.includes('# Installed skills') ? '' : '# Installed skills\n'}${additions.join('\n')}\n`, 'utf8')
+  if (!additions.length) return
+  // Replace the directory entry; never write through the existing file or a link.
+  const temporary = path.join(root, `.gitignore.gittoskill-${randomUUID()}`)
+  let created = false
+  try {
+    const handle = await open(temporary, 'wx', mode)
+    created = true
+    try {
+      await handle.writeFile(`${current}${current && !current.endsWith('\n') ? '\n' : ''}${lines.includes('# Installed skills') ? '' : '# Installed skills\n'}${additions.join('\n')}\n`, 'utf8')
+      await handle.sync()
+    } finally { await handle.close() }
+    await rename(temporary, file)
+    created = false
+  } finally { if (created) await unlink(temporary) }
 }
 
 export async function main(args = process.argv.slice(2)) {

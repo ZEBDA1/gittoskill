@@ -91,3 +91,45 @@ test('.gitignore is created correctly and remains idempotent after install', asy
     } finally { process.chdir(original) }
   })
 })
+
+test('.gitignore links cannot modify files outside the repository', async t => {
+  await temporary(async dir => {
+    const repo = path.join(dir, 'project')
+    const outside = path.join(dir, 'outside.txt')
+    const original = process.cwd()
+    await fs.mkdir(path.join(repo, '.agents', 'skills', 'fixture-coding-skill'), { recursive: true })
+    await fs.writeFile(outside, 'outside marker\n')
+    assert.equal(spawnSync('git', ['init', repo], { encoding: 'utf8' }).status, 0)
+    try {
+      process.chdir(repo)
+      const ignore = path.join(repo, '.gitignore')
+      await fs.link(outside, ignore)
+      await assert.rejects(ensureInstalledSkillIgnored('fixture-coding-skill'), /regular file with no links/)
+      assert.equal(await fs.readFile(outside, 'utf8'), 'outside marker\n')
+      await fs.unlink(ignore)
+      try { await fs.symlink('../outside.txt', ignore, 'file') } catch (error) {
+        if (error.code !== 'EPERM') throw error
+        t.diagnostic('Symbolic link creation unavailable; hard-link protection was verified.')
+        return
+      }
+      await assert.rejects(ensureInstalledSkillIgnored('fixture-coding-skill'), /regular file with no links/)
+      assert.equal(await fs.readFile(outside, 'utf8'), 'outside marker\n')
+      assert.deepEqual((await fs.readdir(repo)).filter(name => name.startsWith('.gitignore.gittoskill-')), [])
+    } finally { process.chdir(original) }
+  })
+})
+
+test('.gitignore replacement preserves existing content without temporary leftovers', async () => {
+  await temporary(async dir => {
+    const original = process.cwd()
+    assert.equal(spawnSync('git', ['init', dir], { encoding: 'utf8' }).status, 0)
+    await fs.mkdir(path.join(dir, '.agents', 'skills', 'fixture-coding-skill'), { recursive: true })
+    await fs.writeFile(path.join(dir, '.gitignore'), '# Existing rules\nnode_modules/')
+    try {
+      process.chdir(dir)
+      await ensureInstalledSkillIgnored('fixture-coding-skill')
+      assert.match(await fs.readFile('.gitignore', 'utf8'), /^# Existing rules\nnode_modules\/\n# Installed skills\n/)
+      assert.deepEqual((await fs.readdir(dir)).filter(name => name.startsWith('.gitignore.gittoskill-')), [])
+    } finally { process.chdir(original) }
+  })
+})

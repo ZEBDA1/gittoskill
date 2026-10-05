@@ -52,6 +52,17 @@ test('Azure rejects truncated and refused output without a second paid attempt',
   }
 })
 
+test('Azure endpoint rejects insecure or credential-bearing URLs before a network call', async () => {
+  for (const base of ['http://example.invalid/openai/v1', 'http://localhost:3000', 'https://user:fixture@example.invalid', 'https://example.invalid?key=fixture', 'https://example.invalid/#fragment', 'not-a-url']) {
+    let calls = 0
+    const azure = loadTs('lib/azure-openai.ts', { env: { AZURE_OPENAI_API_KEY: 'fixture', AZURE_OPENAI_BASE_URL: base }, fetch: async () => { calls++; throw new Error('Network must not be called') } })
+    await assert.rejects(azure.generateAzureChatText({ model: 'fixture', userMessage: 'fixture', systemPrompt: 'fixture' }), error => error.code === 'CONFIGURATION')
+    assert.equal(calls, 0)
+  }
+  const azure = loadTs('lib/azure-openai.ts', { env: { AZURE_OPENAI_BASE_URL: 'https://example.invalid/openai/v1/' } })
+  assert.equal(azure.buildAzureOpenAiUrl('chat/completions'), 'https://example.invalid/openai/v1/chat/completions')
+})
+
 test('analysis rejects invented sources and UI claims without design evidence', () => {
   const { renderAnalysis } = loadTs('lib/profile-analysis.ts')
   const evidence = [{ id: 'e0', repo: 'owner/repo', path: 'package.json', category: 'stack', content: '{}', commit: 'abc123' }]
